@@ -205,7 +205,7 @@ int moveToDir(char* path)
     if (strcmp(path, "og") == 0)
     {
     	strcpy(currentDir, originalDir);
-    	printf("Moved back to the original directory, %s!", originalDir);
+    	printf("Moved back to the original directory, %s", originalDir);
     	return 1;
     }
     else if (strcmp(path, "..") == 0)
