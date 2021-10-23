@@ -241,6 +241,26 @@ int moveToDir(char* path)
     	printf("moving back one directory to %s", currentDir);
     	return 1;
     }
+    int slashes = 0;
+    for (int i = 0; i < strlen(path); i++)
+    {
+    	if (path[i] != '/')
+    	{
+    	    break;
+    	}
+    	slashes = i;
+    }
+    for (int i = 0; i < strlen(path)-slashes-1; i++)
+    {
+    	path[i] = path[i+slashes+1];
+    	printf("%s\n", path);
+    }
+    
+    if (slashes > 0)
+    {
+    	path[strlen(path)-slashes-1] = '\0';
+    }
+    
     int ln = strlen(currentDir);
     if (currentDir[ln-1] != '/')
     {
@@ -258,7 +278,12 @@ int moveToDir(char* path)
     }
     else if (ENOENT == errno)
     {
-    	printf("directory does not exist.");
+    	printf("directory %s does not exist.", path);
+    	int newLn = strlen(currentDir);
+    	if (currentDir[newLn-1] == '/')
+    	{
+    	    currentDir[newLn-1] = '\0';
+    	}
     	return 0;
     }
     else
