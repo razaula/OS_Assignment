@@ -17,6 +17,7 @@
 
 #define MAXCOM 1000 // max number of letters to be supported
 #define MAXLIST 100 // max number of commands to be supported
+#define DATASIZE 1000 // max size of data file
 #define MAXPATH 1024 // max number of characters for a file path
 #define MAXARGS 50 //max number of arguments
 
@@ -46,21 +47,116 @@ typedef struct node
     char* command;
     char* arg;
     struct node *next;
+    struct node *prev;
 } node;
 
 //Initializing history head node
-node *head = NULL;
+node *head, *tail;
+
+void createHistory()
+{
+  // FILE *file = fopen("history_list.txt", "r");
+  // node *temp = malloc(sizeof(node));
+
+  head = malloc(sizeof(node));
+  head->position = 0;
+  head->command = NULL;
+  head->arg = NULL;
+  head->next = NULL;
+  head->prev = NULL;
+  tail = head;
+
+  // if (file == NULL)
+  // {
+  //   head = malloc(sizeof(node));
+  //   head->position = 0;
+  //   head->command = NULL;
+  //   head->arg = NULL;
+  //   head->next = NULL;
+  //   head->prev = NULL;
+  //   tail = head;
+  // }
+  // else
+  // {
+  //   head = tail = NULL;
+  //
+  //   while (fread(temp, sizeof(node), 1, file))
+  //   {
+  //     if (head == NULL)
+  //     {
+  //       head = malloc(sizeof(node));// FILE *file = fopen("history_list.txt", "r");
+  // node *temp = malloc(sizeof(node));
+  //       tail = head;
+  //     }
+  //     else
+  //     {
+  //       tail->next = temp;
+  //       temp->prev = tail;
+  //       tail = temp;
+  //     }
+  //     strcpy(tail->command, temp->command);
+  //     if (temp->arg != NULL)
+  //       strcpy(tail->arg, temp->arg);
+  //
+  //     tail->next = NULL;
+  //   }
+  // }
+}
+
+//Clear history function
+void clearHistory()
+{
+    //Clear the linked list
+    node *temp;
+    printf("Also made it here\n");
+    temp = head->next;
+    if (head->next == NULL)
+      printf("Head is NULL\n");
+    while (head != NULL)
+    {
+      free(head);
+      head = temp;
+      temp = temp->next;
+    }
+}
 
 //History function that prints out the recently typed commands
 void history(char *args)
 {
     //if args = NULL then print the entire linked list
-    
+
     //else if args == '-c'
     //Clear the linked list: clearHistory()
-    
+
     //else, throw 'Invalid arguments' error
-    
+
+    node *temp = tail;
+    int i = 0;
+
+    if (head->next == NULL && head->prev == NULL)
+    {
+      printf("history list is empty\n");
+      return;
+    }
+    printf("arg: %s\n", args);
+
+    if (args == NULL)
+    {
+      while (temp->prev != NULL)
+      {
+        printf("%d: %s\n", i, temp->command);
+        i++;
+        temp = temp->prev;
+      }
+
+      // printf("%d: %s\n", i++, tail->command);
+    }
+    else if (strcmp(args, "-c") == 0)
+    {
+      printf("Made it here\n");
+      clearHistory();
+    }
+
     return;
 }
 
@@ -68,14 +164,27 @@ void history(char *args)
 void saveHistory()
 {
     //Open/create a file and write the linked list to it
-    
-    return;
-}
+    char data[DATASIZE];
+    FILE *file;
+    node *temp = head;
 
-//Clear history function
-void clearHistory()
-{
-    //Clear the linked list
+    file = fopen("history_list.txt", "w");
+
+    if (file == NULL)
+    {
+        /* File not created hence exit */
+        printf("Unable to create file.\n");
+        return;
+    }
+
+    while (temp != NULL)
+    {
+      fwrite(temp, sizeof(node), 1, file);
+      temp = temp->next;
+    }
+
+    fclose(file);
+
     return;
 }
 
@@ -84,11 +193,16 @@ void replay(char *args)
 {
     //verify that args is a number
         //If not throw an error and return
-    
+
     //Filter through history linked list until temp->position = args
         //If found print that node to the screen and execute the command
         //else throw error
-    
+// if(head == NULL)
+    // {
+    //     head = temp;
+    //     tail = temp;
+    //     return;
+    // }
     return;
 }
 
@@ -97,7 +211,7 @@ void dalek(char *args)
 {
     //Intitializing the PID
     pid_t pid;
-    
+
     //Verifiying that args is a number
     if(args == NULL)
     {
@@ -123,31 +237,36 @@ void addHistory(char *commands, char *args)
 {
     //Incrementing the history count
     histCount++;
-    
+
+    if (commands == NULL)
+    {
+      printf("Command is empty\n");
+      return;
+    }
+
     //Creating temp nodes
-    node *temp = (node*)malloc(sizeof(node));
+    node *temp = malloc(sizeof(node));
+    temp->command = malloc(sizeof(char));
+    temp->arg = malloc(sizeof(char));
 
     //Saving the data to the new node
     temp->position = histCount;
-    temp->command = commands;
-    temp->arg = args;
-    temp->next = NULL;
-    
-    if(head == NULL)
-    {
-        head = temp;
-        return;
-    }
+    strcpy(temp->command, commands);
 
-    node *t = head;
-    while(t->next != NULL)
-    {
-        t = t->next;
-    }
+    if (args != NULL)
+      strcpy(temp->arg, args);
 
-    t->next = temp;
+    // if(head == NULL)
+    // {
+    //     head = temp;
+    //     tail = temp;
+    //     return;
+    // }
 
-    return;
+    // node *t = tail;
+    tail->next = temp;
+    temp->prev = tail;
+    tail = temp;
 }
 
 //ByeBye Function
@@ -163,10 +282,10 @@ void byebye(char* args)
     {
         //Adding 'byebye' to history
         addHistory("byebye", NULL);
-        
+
         //Saving history to file
         saveHistory();
-        
+
         //Exiting the program
         exit(0);
     }
@@ -188,13 +307,13 @@ void init_shell()
     sleep(1);
     clear();
 }
-   
+
 // Function to print Current Directory.
 void whereami()
 {
     printf("\nDir: %s\n", currentDir);
 }
-  
+
 void movetodir(char* path)
 {
     char *temp;
@@ -221,12 +340,12 @@ void movetodir(char* path)
             return;
         }
     }
-    
+
     if(temp != NULL)
     {
         //opening the directory
         DIR *dir = opendir(temp);
-        
+
         //Checks if path exists
         if(dir)
         {
@@ -248,7 +367,7 @@ void movetodir(char* path)
         return;
     }
 }
-  
+
 //Gets the length of the arguments
 int argsLength(char **args)
 {
@@ -257,7 +376,7 @@ int argsLength(char **args)
     {
         j++;
     }
-    
+
     return j;
 }
 
@@ -274,7 +393,7 @@ void start(char *args)
         printf("Error:'start' requires an argument.\n");
         return;
     }
-   
+
     //Duplicating the args string because strsep won't work otherwise
     char *args2 = strdup(args);
 
@@ -293,18 +412,19 @@ void start(char *args)
 
         //Getting the number of the parameters
         n = argsLength(params) + 1;
-        
+
         //Saving the parameters to a new array of the correct size
         char *temp[n];
         while(params[j] != NULL)
         {
             temp[j] = params[j];
-            j++;
+            j++;// FILE *file = fopen("history_list.txt", "r");
+  // node *temp = malloc(sizeof(node));
         }
         //Setting the last value as null; need for execv to work
         temp[n] = NULL;
     }
-    
+
     //creating a new process
     pid = fork();
 
@@ -333,7 +453,7 @@ void start(char *args)
             strcpy(rPath, currentDir);
             strcat(rPath, "/");
             strcat(rPath, params[0]);
-            
+
             if(execv(params[0], params) < 0)
             {
                 printf("Error: Program could not be executed.\n");
@@ -362,7 +482,7 @@ void background(char *args)
         printf("Error:'start' requires an argument.\n");
         return;
     }
-   
+
     //Duplicating the args string because strsep won't work otherwise
     char *args2 = strdup(args);
 
@@ -381,7 +501,7 @@ void background(char *args)
 
         //Getting the number of the parameters
         n = argsLength(params) + 1;
-        
+
         //Saving the parameters to a new array of the correct size
         char *temp[n];
         while(params[j] != NULL)
@@ -392,7 +512,7 @@ void background(char *args)
         //Setting the last value as null; need for execv to work
         temp[n] = NULL;
     }
-    
+
     //creating a new process
     pid = fork();
 
@@ -421,8 +541,9 @@ void background(char *args)
             strcpy(rPath, currentDir);
             strcat(rPath, "/");
             strcat(rPath, params[0]);
-            
-            if(execv(params[0], params) < 0)
+
+            if(execv(params[0], params) < 0)// FILE *file = fopen("history_list.txt", "r");
+  // node *temp = malloc(sizeof(node));
             {
                 printf("Error: Program could not be executed.\n");
                 return;
@@ -449,56 +570,72 @@ char* stripwhite(char *str)
 
 void processInput(char* str)
 {
-    char *command, *args;
+    char *command, *args, *theCommand;
     char *str2 = strdup(str);
 
     //Separating the command from the input
     command = strsep(&str2, " ");
-    
+
     //Everything that comes after the command, may be null
     args = str2;
-    
+
     //saving the command to the history list
-    addHistory(command, args);
+    // addHistory(command, args);
 
     //Executing commands
     if(strcmp(command, "movetodir") == 0)
     {
+        strcpy(theCommand, "movetodir");
+        addHistory(theCommand, args);
         movetodir(args);
         return;
     }
     else if(strcmp(command, "whereami") == 0)
     {
+        strcpy(theCommand, "whereami");
+        addHistory(theCommand, args);
         whereami();
         return;
     }
     else if(strcmp(command, "history") == 0)
     {
+        strcpy(theCommand, "history");
+        addHistory(theCommand, args);
         history(args);
         return;
     }
     else if(strcmp(command, "byebye") == 0)
     {
+        strcpy(theCommand, "byebye");
+        addHistory(theCommand, args);
         byebye(args);
         return;
     }
     else if(strcmp(command, "replay") == 0)
     {
+        strcpy(theCommand, "replay");
+        addHistory(theCommand, args);
         replay(args);
         return;
     }
     else if(strcmp(command, "start") == 0)
     {
+        strcpy(theCommand, "start");
+        addHistory(theCommand, args);
         start(args);
         return;
     }
     else if(strcmp(command, "background") == 0)
     {
+        strcpy(theCommand, "background");
+        addHistory(theCommand, args);
         background(args);
         return;
     }
     else if(strcmp(command, "dalek") == 0)
     {
+        strcpy(theCommand, "dalek");
+        addHistory(theCommand, args);
         dalek(args);
         return;
     }
@@ -511,24 +648,24 @@ void processInput(char* str)
 int main()
 {
     char *text, *line;
+    createHistory();
     init_shell();
- 
+
     getcwd(currentDir, sizeof(currentDir));
     strcpy(originalDir, currentDir);
-    
+
     //Loop to read in input
     while (1)
     {
         do{
             text = readline("#");
         }while(iscntrl(*text)||isspace(*text)); //Loops the readline if input is null
-        
+
         //stripping leading or trailing white spaces
         line = stripwhite(text);
 
         //processing the input
         processInput(line);
     }
-    
-}
 
+}

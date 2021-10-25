@@ -23,7 +23,80 @@ char originalDir[1024];
 typedef struct List {
   char *command;
   int position;
+  struct List *next;
+  struct List *prev;
 } List;
+
+List *history, *head, *tail;
+
+void createHistory()
+{
+  history = malloc(sizeof(List));
+  history->command = NULL;
+  history->next = NULL;
+  history->prev = NULL;
+  head = tail = history;
+}
+
+void historyList(char* option)
+{
+  List *temp = tail;
+  List *temp2;
+  int i = 0;
+
+  if (history->next == NULL && history->prev == NULL)
+  {
+    printf("history list is empty\n");
+    return;
+  }
+
+  if (option == NULL)
+  {
+    while (tail->prev != NULL)
+    {
+      printf("%d: %s\n", i, tail->command);
+      i++;
+      tail = tail->prev;
+    }
+
+    // printf("%d: %s\n", i++, tail->command);
+  }
+  else if (strcmp(option, "-c") == 0)
+  {
+    temp = head->next;
+    while (head != NULL)
+    {
+      free(head);
+      head = temp;
+      temp = temp->next;
+    }
+  }
+}
+
+void saveHistory(char* command)
+{
+  List *addCommand = NULL;
+
+  if (command == NULL)
+  {
+    printf("Command is empty\n");
+    return;
+  }
+
+  if (history == NULL)
+  {
+    printf("\nSystem Error...\n");
+    return;
+  }
+
+  addCommand = malloc(sizeof(List));
+  addCommand->command = malloc(sizeof(char));
+  strcpy(addCommand->command, command);
+
+  tail->next = addCommand;
+  addCommand->prev = tail;
+  tail = addCommand;
+}
 
 // Greeting shell during startup
 void init_shell()
@@ -61,6 +134,11 @@ int takeInput(char* str)
 void printDir()
 {
     printf("\nDir: %s", currentDir);
+}
+
+void printTest()
+{
+  printf("\nTesting 124...\n");
 }
 
 // Function where the system command is executed
@@ -159,9 +237,10 @@ void openHelp()
 // Function to execute builtin commands
 int ownCmdHandler(char** parsed)
 {
-    int NoOfOwnCmds = 6, i, switchOwnArg = 0;
+    int NoOfOwnCmds = 8, i, switchOwnArg = 0;
     char* ListOfOwnCmds[NoOfOwnCmds];
     char* username;
+    char *command;;
 
     ListOfOwnCmds[0] = "exit";
     ListOfOwnCmds[1] = "cd";
@@ -169,6 +248,8 @@ int ownCmdHandler(char** parsed)
     ListOfOwnCmds[3] = "hello";
     ListOfOwnCmds[4] = "whereami";
     ListOfOwnCmds[5] = "movetodir";
+    ListOfOwnCmds[6] = "history";
+    ListOfOwnCmds[7] = "history -c";
 
     for (i = 0; i < NoOfOwnCmds; i++) {
         if (strcmp(parsed[0], ListOfOwnCmds[i]) == 0) {
@@ -183,9 +264,15 @@ int ownCmdHandler(char** parsed)
         exit(0);
     case 2:
         chdir(parsed[1]);
+        command = malloc(sizeof(char));
+        strcpy(command, "cd");
+        saveHistory(command);
         return 1;
     case 3:
         openHelp();
+        command = malloc(sizeof(char));
+        strcpy(command, "help");
+        saveHistory(command);
         return 1;
     case 4:
         username = getenv("USER");
@@ -193,13 +280,25 @@ int ownCmdHandler(char** parsed)
             "not a place to play around."
             "\nUse help to know more..\n",
             username);
+        command = malloc(sizeof(char));
+        strcpy(command, "hello");
+        saveHistory(command);
         return 1;
     case 5:
     	printDir();
+      command = malloc(sizeof(char));
+      strcpy(command, "whereami");
+      saveHistory(command);
     	return 1;
     case 6:
     	moveToDir(parsed[1]);
     	return 1;
+    case 7:
+      historyList(NULL);
+      return 1;
+    case 8:
+      historyList("-c");
+      return 1;
     default:
         break;
     }
@@ -255,12 +354,12 @@ int moveToDir(char* path)
     	path[i] = path[i+slashes+1];
     	printf("%s\n", path);
     }
-    
+
     if (slashes > 0)
     {
     	path[strlen(path)-slashes-1] = '\0';
     }
-    
+
     int ln = strlen(currentDir);
     if (currentDir[ln-1] != '/')
     {
@@ -353,6 +452,7 @@ int main()
     char inputString[MAXCOM], *parsedArgs[MAXLIST];
     char* parsedArgsPiped[MAXLIST];
     int execFlag = 0;
+    createHistory();
     init_shell();
 
     //currentDir = (char *) malloc(1024*sizeof(char*));
