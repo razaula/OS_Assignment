@@ -96,7 +96,7 @@ void replay(char *args)
 void dalek(char *args)
 {
     //Intitializing the PID
-    pid_t pid;
+    pid_t pid = atoi(args);
     
     //Verifiying that args is a number
     if(args == NULL)
@@ -109,8 +109,8 @@ void dalek(char *args)
     }
     else
     {
-        pid = kill(*args, SIGKILL); //Killing the process
-        if(!pid)
+        int killed = kill(pid, SIGKILL); //Killing the process
+        if(killed != -1)
             printf("Processes terminated successfully.\n");
         else
             printf("Error: Process termination was unsuccessful.\n");
