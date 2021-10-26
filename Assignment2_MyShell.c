@@ -188,23 +188,97 @@ void saveHistory()
     return;
 }
 
+
 //Replay function
 void replay(char *args)
 {
     //verify that args is a number
-        //If not throw an error and return
+    node *temp = head; 
+    
+    //verify that args is a number
+    if(args == NULL)
+    {
+        printf("Error: No number entered.\n");
+    }
+    else
+    {
+        if(temp == NULL)
+        {
+            printf("History is empty.\n");   
+            return;
+        }
+        
+        while(temp != NULL)
+        {
+            if(temp->position == isdigit(*args))
+            {
+                //call updated processInput function
+                replayProcessInput(temp->command, temp->arg);
+            }
+            else temp->next;
+        }
+    }
 
     //Filter through history linked list until temp->position = args
         //If found print that node to the screen and execute the command
         //else throw error
-// if(head == NULL)
-    // {
-    //     head = temp;
-    //     tail = temp;
-    //     return;
-    // }
     return;
 }
+
+
+//processInput function solely for replay (no strcopy() and addHistory() functions included)
+void replayProcessInput(char* command, char* args)
+{
+
+    //Executing commands
+    if(strcmp(command, "movetodir") == 0)
+    {
+        movetodir(args);
+        return;
+    }
+    else if(strcmp(command, "whereami") == 0)
+    {
+        whereami();
+        return;
+    }
+    else if(strcmp(command, "history") == 0)
+    {
+        history(args);
+        return;
+    }
+    else if(strcmp(command, "byebye") == 0)
+    {
+        byebye(args);
+        return;
+    }
+    else if(strcmp(command, "replay") == 0)
+    {
+        replay(args);
+        return;
+    }
+    else if(strcmp(command, "start") == 0)
+    {
+        start(args);
+        return;
+    }
+    else if(strcmp(command, "background") == 0)
+    {
+        background(args);
+        return;
+    }
+    else if(strcmp(command, "dalek") == 0)
+    {
+        dalek(args);
+        return;
+    }
+    else
+    {
+        printf("No such command.\n");
+    }
+
+    return;
+}
+
 
 //Dalek function
 void dalek(char *args)
@@ -613,9 +687,9 @@ void processInput(char* str)
     }
     else if(strcmp(command, "replay") == 0)
     {
+        replay(args);
         strcpy(theCommand, "replay");
         addHistory(theCommand, args);
-        replay(args);
         return;
     }
     else if(strcmp(command, "start") == 0)
