@@ -59,6 +59,7 @@ void createHistory()
   // node *temp = malloc(sizeof(node));
 
   head = malloc(sizeof(node));
+  head->command = malloc(sizeof(char));
   head->position = 0;
   head->command = NULL;
   head->arg = NULL;
@@ -108,16 +109,12 @@ void clearHistory()
 {
     //Clear the linked list
     node *temp;
-    printf("Also made it here\n");
+
     temp = head->next;
     if (head->next == NULL)
       printf("Head is NULL\n");
-    while (head != NULL)
-    {
-      free(head);
-      head = temp;
-      temp = temp->next;
-    }
+
+    printf("Outside: %s\n", head->command);
 }
 
 //History function that prints out the recently typed commands
@@ -142,6 +139,7 @@ void history(char *args)
 
     if (args == NULL)
     {
+      printf("head: %s\n", head->command);
       while (temp->prev != NULL)
       {
         printf("%d: %s\n", i, temp->command);
@@ -154,7 +152,15 @@ void history(char *args)
     else if (strcmp(args, "-c") == 0)
     {
       printf("Made it here\n");
-      clearHistory();
+      temp = head->next;
+      printf("head: %s\n", head->command);
+      while (tail != NULL)
+      {
+        printf("%s\n", head->command);
+        free(tail);
+        tail = temp;
+        temp = temp->prev;
+      }
     }
 
     return;
@@ -235,8 +241,6 @@ void dalek(char *args)
 //Add to history function
 void addHistory(char *commands, char *args)
 {
-    //Incrementing the history count
-    histCount++;
 
     if (commands == NULL)
     {
@@ -244,10 +248,14 @@ void addHistory(char *commands, char *args)
       return;
     }
 
+    // Problem with head pointing to null could be something to do with the fact that the proper amount
+    // of memory isn't enough as I am only allocating memory for a single char char character which is
+    // just a byte.
+
     //Creating temp nodes
     node *temp = malloc(sizeof(node));
-    temp->command = malloc(sizeof(char));
-    temp->arg = malloc(sizeof(char));
+    temp->command = malloc(sizeof(char) * (strlen(commands) + 1));
+    temp->arg = malloc(sizeof(char) * (strlen(args) + 1));
 
     //Saving the data to the new node
     temp->position = histCount;
@@ -267,6 +275,12 @@ void addHistory(char *commands, char *args)
     tail->next = temp;
     temp->prev = tail;
     tail = temp;
+
+    //Incrementing the history count
+    histCount++;
+
+    if (histCount == 0)
+      head = tail;
 }
 
 //ByeBye Function

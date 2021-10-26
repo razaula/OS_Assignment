@@ -28,6 +28,7 @@ typedef struct List {
 } List;
 
 List *history, *head, *tail;
+int length = 0;
 
 void createHistory()
 {
@@ -40,7 +41,7 @@ void createHistory()
 
 void historyList(char* option)
 {
-  List *temp = tail;
+  List *temp = head;
   List *temp2;
   int i = 0;
 
@@ -52,11 +53,12 @@ void historyList(char* option)
 
   if (option == NULL)
   {
-    while (tail->prev != NULL)
+    printf("head: %s\n", head->command);
+    while (temp->prev != NULL)
     {
-      printf("%d: %s\n", i, tail->command);
+      printf("%d: %s\n", i, temp->command);
       i++;
-      tail = tail->prev;
+      temp = temp->next;
     }
 
     // printf("%d: %s\n", i++, tail->command);
@@ -64,6 +66,7 @@ void historyList(char* option)
   else if (strcmp(option, "-c") == 0)
   {
     temp = head->next;
+    printf("head command: %s\n", head->command);
     while (head != NULL)
     {
       free(head);
@@ -88,6 +91,18 @@ void saveHistory(char* command)
     printf("\nSystem Error...\n");
     return;
   }
+  else if (length == 0)
+  {
+    addCommand = malloc(sizeof(List));
+    addCommand->command = malloc(sizeof(char));
+    strcpy(addCommand->command, command);
+
+    tail->next = addCommand;
+    addCommand->prev = tail;
+    head = tail = addCommand;
+    length++;
+  }
+
 
   addCommand = malloc(sizeof(List));
   addCommand->command = malloc(sizeof(char));
@@ -96,6 +111,7 @@ void saveHistory(char* command)
   tail->next = addCommand;
   addCommand->prev = tail;
   tail = addCommand;
+  length++;
 }
 
 // Greeting shell during startup
