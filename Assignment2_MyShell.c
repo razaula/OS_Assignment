@@ -108,13 +108,23 @@ void createHistory()
 void clearHistory()
 {
     //Clear the linked list
-    temp = head->next;
-    while (head != NULL)
+    node *temp = head;
+    // node *next;
+
+    while (temp->next)
     {
+      temp = head->next;
       free(head);
       head = temp;
-      temp = temp->next;
+      // next = temp->next;
+      // printf("Deleting: %s\n", temp->command);
+      // free(temp->command);
+      // free(temp->arg);
+      // free(temp);
+      // temp = next;
     }
+    printf("hello\n");
+    free(temp);
 }
 
 //History function that prints out the recently typed commands
@@ -236,10 +246,6 @@ void addHistory(char *commands, char *args)
       return;
     }
 
-    // Problem with head pointing to null could be something to do with the fact that the proper amount
-    // of memory isn't enough as I am only allocating memory for a single char char character which is
-    // just a byte.
-
     //Creating temp nodes
     node *temp = malloc(sizeof(node));
     temp->command = malloc(sizeof(char));
@@ -266,6 +272,8 @@ void addHistory(char *commands, char *args)
 
     if (histCount == 0)
       head = tail;
+
+    tail->next = NULL;
 
     //Incrementing the history count
     histCount++;
