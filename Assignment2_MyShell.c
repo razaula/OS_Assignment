@@ -59,7 +59,7 @@ void createHistory()
   // node *temp = malloc(sizeof(node));
 
   head = malloc(sizeof(node));
-  head->command = malloc(sizeof(char));
+  head->command = NULL;
   head->position = 0;
   head->command = NULL;
   head->arg = NULL;
@@ -108,13 +108,13 @@ void createHistory()
 void clearHistory()
 {
     //Clear the linked list
-    node *temp;
-
     temp = head->next;
-    if (head->next == NULL)
-      printf("Head is NULL\n");
-
-    printf("Outside: %s\n", head->command);
+    while (head != NULL)
+    {
+      free(head);
+      head = temp;
+      temp = temp->next;
+    }
 }
 
 //History function that prints out the recently typed commands
@@ -135,32 +135,20 @@ void history(char *args)
       printf("history list is empty\n");
       return;
     }
-    printf("arg: %s\n", args);
 
     if (args == NULL)
     {
-      printf("head: %s\n", head->command);
+      printf("head: %p\n", head);
       while (temp->prev != NULL)
       {
         printf("%d: %s\n", i, temp->command);
         i++;
         temp = temp->prev;
       }
-
-      // printf("%d: %s\n", i++, tail->command);
     }
     else if (strcmp(args, "-c") == 0)
     {
-      printf("Made it here\n");
-      temp = head->next;
-      printf("head: %s\n", head->command);
-      while (tail != NULL)
-      {
-        printf("%s\n", head->command);
-        free(tail);
-        tail = temp;
-        temp = temp->prev;
-      }
+      clearHistory();
     }
 
     return;
@@ -194,97 +182,23 @@ void saveHistory()
     return;
 }
 
-
 //Replay function
 void replay(char *args)
 {
     //verify that args is a number
-    node *temp = head; 
-    
-    //verify that args is a number
-    if(args == NULL)
-    {
-        printf("Error: No number entered.\n");
-    }
-    else
-    {
-        if(temp == NULL)
-        {
-            printf("History is empty.\n");   
-            return;
-        }
-        
-        while(temp != NULL)
-        {
-            if(temp->position == isdigit(*args))
-            {
-                //call updated processInput function
-                replayProcessInput(temp->command, temp->arg);
-            }
-            else temp->next;
-        }
-    }
+        //If not throw an error and return
 
     //Filter through history linked list until temp->position = args
         //If found print that node to the screen and execute the command
         //else throw error
+// if(head == NULL)
+    // {
+    //     head = temp;
+    //     tail = temp;
+    //     return;
+    // }
     return;
 }
-
-
-//processInput function solely for replay (no strcopy() and addHistory() functions included)
-void replayProcessInput(char* command, char* args)
-{
-
-    //Executing commands
-    if(strcmp(command, "movetodir") == 0)
-    {
-        movetodir(args);
-        return;
-    }
-    else if(strcmp(command, "whereami") == 0)
-    {
-        whereami();
-        return;
-    }
-    else if(strcmp(command, "history") == 0)
-    {
-        history(args);
-        return;
-    }
-    else if(strcmp(command, "byebye") == 0)
-    {
-        byebye(args);
-        return;
-    }
-    else if(strcmp(command, "replay") == 0)
-    {
-        replay(args);
-        return;
-    }
-    else if(strcmp(command, "start") == 0)
-    {
-        start(args);
-        return;
-    }
-    else if(strcmp(command, "background") == 0)
-    {
-        background(args);
-        return;
-    }
-    else if(strcmp(command, "dalek") == 0)
-    {
-        dalek(args);
-        return;
-    }
-    else
-    {
-        printf("No such command.\n");
-    }
-
-    return;
-}
-
 
 //Dalek function
 void dalek(char *args)
@@ -328,8 +242,8 @@ void addHistory(char *commands, char *args)
 
     //Creating temp nodes
     node *temp = malloc(sizeof(node));
-    temp->command = malloc(sizeof(char) * (strlen(commands) + 1));
-    temp->arg = malloc(sizeof(char) * (strlen(args) + 1));
+    temp->command = malloc(sizeof(char));
+    temp->arg = malloc(sizeof(char));
 
     //Saving the data to the new node
     temp->position = histCount;
@@ -350,11 +264,11 @@ void addHistory(char *commands, char *args)
     temp->prev = tail;
     tail = temp;
 
-    //Incrementing the history count
-    histCount++;
-
     if (histCount == 0)
       head = tail;
+
+    //Incrementing the history count
+    histCount++;
 }
 
 //ByeBye Function
@@ -506,8 +420,7 @@ void start(char *args)
         while(params[j] != NULL)
         {
             temp[j] = params[j];
-            j++;// FILE *file = fopen("history_list.txt", "r");
-  // node *temp = malloc(sizeof(node));
+            j++;
         }
         //Setting the last value as null; need for execv to work
         temp[n] = NULL;
@@ -630,8 +543,7 @@ void background(char *args)
             strcat(rPath, "/");
             strcat(rPath, params[0]);
 
-            if(execv(params[0], params) < 0)// FILE *file = fopen("history_list.txt", "r");
-  // node *temp = malloc(sizeof(node));
+            if(execv(params[0], params) < 0)
             {
                 printf("Error: Program could not be executed.\n");
                 return;
@@ -701,9 +613,9 @@ void processInput(char* str)
     }
     else if(strcmp(command, "replay") == 0)
     {
-        replay(args);
         strcpy(theCommand, "replay");
         addHistory(theCommand, args);
+        replay(args);
         return;
     }
     else if(strcmp(command, "start") == 0)
