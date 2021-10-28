@@ -55,9 +55,22 @@ node *head, *tail;
 
 void createHistory()
 {
-  // FILE *file = fopen("history_list.txt", "r");
+  FILE *file = fopen("history_list.txt", "r");
   // node *temp = malloc(sizeof(node));
 
+  // Just gotta figure out how to read the commands from the saved file
+  // and convert it into a linked list.
+
+  // head = malloc(sizeof(node));
+  // head->command = NULL;
+  // head->position = 0;
+  // head->command = NULL;
+  // head->arg = NULL;
+  // head->next = NULL;
+  // head->prev = NULL;
+  // tail = head;
+
+  // Create a new history list if no file exists.
   head = malloc(sizeof(node));
   head->command = NULL;
   head->position = 0;
@@ -67,41 +80,42 @@ void createHistory()
   head->prev = NULL;
   tail = head;
 
-  // if (file == NULL)
-  // {
-  //   head = malloc(sizeof(node));
-  //   head->position = 0;
-  //   head->command = NULL;
-  //   head->arg = NULL;
-  //   head->next = NULL;
-  //   head->prev = NULL;
-  //   tail = head;
-  // }
-  // else
-  // {
-  //   head = tail = NULL;
-  //
-  //   while (fread(temp, sizeof(node), 1, file))
-  //   {
-  //     if (head == NULL)
-  //     {
-  //       head = malloc(sizeof(node));// FILE *file = fopen("history_list.txt", "r");
-  // node *temp = malloc(sizeof(node));
-  //       tail = head;
-  //     }
-  //     else
-  //     {
-  //       tail->next = temp;
-  //       temp->prev = tail;
-  //       tail = temp;
-  //     }
-  //     strcpy(tail->command, temp->command);
-  //     if (temp->arg != NULL)
-  //       strcpy(tail->arg, temp->arg);
-  //
-  //     tail->next = NULL;
-  //   }
-  // }
+
+  // Read the commands from the list.
+  if (file != NULL)
+  {
+    char buffer[MAXCOM];
+    node *temp;
+    char *token = NULL;
+
+    while (fgets(buffer, MAXCOM, file) != NULL)
+    {
+      temp = malloc(sizeof(node));
+      temp->position = 0;
+      temp->command = malloc(sizeof(char));
+      temp->arg = malloc(sizeof(char));
+      temp->next = NULL;
+      temp->prev = NULL;
+
+      token = strtok(buffer, " ");
+      strcpy(temp->command, token);
+
+      token = strtok(buffer, " ");
+
+      if (token != NULL)
+        strcpy(temp->arg, token);
+
+      histCount++;
+      tail->position++;
+
+      tail->next = temp;
+      temp->prev = tail;
+      tail = temp;
+    }
+    tail->next = NULL;
+  }
+
+  fclose(file);
 }
 
 //Clear history function
@@ -109,47 +123,33 @@ void clearHistory()
 {
     //Clear the linked list
     node *temp = head;
-    // node *next;
 
     while (temp->next)
     {
       temp = head->next;
       free(head);
       head = temp;
-      // next = temp->next;
-      // printf("Deleting: %s\n", temp->command);
-      // free(temp->command);
-      // free(temp->arg);
-      // free(temp);
-      // temp = next;
     }
-    printf("hello\n");
-    free(temp);
+    // free(temp);
+    printf("head: %p\n", head);
 }
 
 //History function that prints out the recently typed commands
 void history(char *args)
 {
-    //if args = NULL then print the entire linked list
-
-    //else if args == '-c'
-    //Clear the linked list: clearHistory()
-
-    //else, throw 'Invalid arguments' error
-
     node *temp = tail;
     int i = 0;
 
-    if (head->next == NULL && head->prev == NULL)
+    if (head == NULL)
     {
       printf("history list is empty\n");
       return;
     }
 
-    if (args == NULL)
+    if (head != NULL && args == NULL)
     {
       printf("head: %p\n", head);
-      while (temp->prev != NULL)
+      while (temp != NULL)
       {
         printf("%d: %s\n", i, temp->command);
         i++;
@@ -183,7 +183,8 @@ void saveHistory()
 
     while (temp != NULL)
     {
-      fwrite(temp, sizeof(node), 1, file);
+      fputs(temp->command, file);
+      fputs("\n", file);
       temp = temp->next;
     }
 
@@ -239,7 +240,6 @@ void dalek(char *args)
 //Add to history function
 void addHistory(char *commands, char *args)
 {
-
     if (commands == NULL)
     {
       printf("Command is empty\n");
@@ -470,7 +470,7 @@ void start(char *args)
             }
         }
     }
-    else if(pid > 0) //parent process
+    else if (pid > 0) //parent process
     {
         //Queues parent until child program exits
         wait(NULL);
@@ -609,13 +609,18 @@ void processInput(char* str)
     {
         strcpy(theCommand, "history");
         addHistory(theCommand, args);
-        history(args);
+
+        if (args == NULL)
+          history(NULL);
+        else
+          history(args);
+
         return;
     }
     else if(strcmp(command, "byebye") == 0)
     {
         strcpy(theCommand, "byebye");
-        addHistory(theCommand, args);
+        // addHistory(theCommand, args);
         byebye(args);
         return;
     }
