@@ -56,7 +56,7 @@ node *head, *tail;
 void createHistory()
 {
   FILE *file = fopen("history_list.txt", "r");
-
+  
   // Create a new history list if no file exists.
   head = malloc(sizeof(node));
   head->command = NULL;
@@ -71,18 +71,23 @@ void createHistory()
   // Read the commands from the list.
   if (file != NULL)
   {
+    //ssize_t read;
+    //size_t len = 0;
     char buffer[MAXCOM];
     node *temp;
     char *token = NULL;
 
-    while (fgets(buffer, MAXCOM, file) != NULL)
+    while (fgets(buffer, sizeof(buffer), file) != NULL)
     {
+      //char *strBuffer = strdup(buffer);
+      
       temp = malloc(sizeof(node));
       temp->position = 0;
       temp->command = malloc(sizeof(char));
       temp->arg = malloc(sizeof(char));
       temp->next = NULL;
       temp->prev = NULL;
+
 
       token = strtok(buffer, " ");
       strcpy(temp->command, token);
@@ -92,6 +97,7 @@ void createHistory()
       if (token != NULL)
         strcpy(temp->arg, token);
 
+
       histCount++;
       tail->position++;
 
@@ -100,15 +106,20 @@ void createHistory()
       tail = temp;
     }
     tail->next = NULL;
-  }
+    fclose(file);  
+}
 
-  fclose(file);
+  
 }
 
 //Clear history function
 void clearHistory()
 {
-    
+   // FILE *file;
+    //file = fopen("history_list.txt", "r");
+    int ret;
+
+    //fclose(file);
     //Clear the linked list
     node *temp = head;
 
@@ -118,15 +129,21 @@ void clearHistory()
       free(head);
       head = temp;
     }
+
+    ret = remove("history_list.txt");
+
     // free(temp);
-    printf("head: %p\n", head);
+    //printf("head: %p\n", head);
+
+
+   histCount = 0;
+   // head = tail = malloc(sizeof(node));
+    createHistory();
 }
 
 //History function that prints out the recently typed commands
 void history(char *args)
 {
-    addHistory('history', args);
-    
     node *temp = tail;
     int i = 0;
 
@@ -138,8 +155,8 @@ void history(char *args)
 
     if (head != NULL && args == NULL)
     {
-      printf("head: %p\n", head);
-      while (temp != NULL)
+      //printf("head: %p\n", head);
+      while (temp->prev != NULL)
       {
         printf("%d: %s\n", i, temp->command);
         i++;
@@ -150,13 +167,13 @@ void history(char *args)
     {
       clearHistory();
     }
+
     return;
 }
 
 //Function that saves the history to a file
 void saveHistory()
 {
-    
     //Open/create a file and write the linked list to it
     char data[DATASIZE];
     FILE *file;
@@ -171,10 +188,20 @@ void saveHistory()
         return;
     }
 
+    fprintf(file, "%d\n", histCount);
+
     while (temp != NULL)
     {
-      fputs(temp->command, file);
-      fputs("\n", file);
+
+      if(temp->arg ==  NULL)
+      {
+	fprintf(file, "%s\n",temp->command);
+      }
+      else
+      {
+        fprintf(file, "%s %s\n",temp->command, temp->arg);
+      }
+
       temp = temp->next;
     }
 
@@ -186,18 +213,100 @@ void saveHistory()
 //Replay function
 void replay(char *args)
 {
-    //verify that args is a number
-        //If not throw an error and return
+   int commandNum = atoi(args);
+  // printf("%d\n", commandNum);
 
+   //verify that args is a number
+    node *temp = head; 
+    
+    //verify that args is a number
+    if(args == NULL)
+    {
+        printf("Error: No number entered.\n");
+	return;
+    }
+    else
+    {
+        if(temp == NULL)
+        {
+           // printf("History is empty.\n");   
+            return;
+        }
+        
+        while(temp != NULL)
+        {
+	  //printf("here\n");
+            if(temp->position == (histCount - commandNum - 1))
+            {
+		//printf("Made it here\n");
+		printf("%s %s\n", temp->command, temp->arg);
+
+                //call updated processInput function
+                replayProcessInput(temp);
+		break;
+            }
+            else temp = temp->next;
+        }
+    }
+        
+
+//	free(updatedArgs);
     //Filter through history linked list until temp->position = args
         //If found print that node to the screen and execute the command
         //else throw error
-// if(head == NULL)
-    // {
-    //     head = temp;
-    //     tail = temp;
-    //     return;
-    // }
+    return;
+}
+
+//processInput function solely for replay (no strcopy() and addHistory() functions included)
+void replayProcessInput(node *replayNode)
+{
+
+    //Executing commands
+    if(strcmp(replayNode->command, "movetodir") == 0)
+    {
+        movetodir(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "whereami") == 0)
+    {
+        whereami();
+        return;
+    }
+    else if(strcmp(replayNode->command, "history") == 0)
+    {
+        history(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "byebye") == 0)
+    {
+        byebye(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "replay") == 0)
+    {
+        replay(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "start") == 0)
+    {
+        start(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "background") == 0)
+    {
+        background(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "dalek") == 0)
+    {
+        dalek(replayNode->arg);
+        return;
+    }
+    else
+    {
+        printf("No such command.\n");
+    }
+
     return;
 }
 
