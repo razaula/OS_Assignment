@@ -258,6 +258,7 @@ void replay(char *args)
 		            printf("%s %s\n", temp->command, temp->arg); 
                     //call updated processInput function
                     replayProcessInput(temp);  
+                    break;
                 }
             }
             else temp = temp->next;
