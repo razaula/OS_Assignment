@@ -148,6 +148,8 @@ void clearHistory()
 //History function that prints out the recently typed commands
 void history(char *args)
 {
+    addHistory("history", NULL)
+
     node *temp = tail;
     int i = 0;
 
@@ -191,9 +193,7 @@ void saveHistory()
         printf("Unable to create file.\n");
         return;
     }
-
-    fprintf(file, "%d\n", histCount);
-
+    
     while (temp != NULL)
     {
 
