@@ -383,8 +383,6 @@ void addHistory(char *commands, char *args)
 //ByeBye Function
 void byebye(char* args)
 {
-    addHistory('byebye', args);
-    
     //throws error if there are parameters
     if(args != NULL)
     {
@@ -424,7 +422,7 @@ void init_shell()
 // Function to print Current Directory.
 void whereami()
 {
-    addHistory('whereami', args);
+    addHistory('whereami');
     printf("\nDir: %s\n", currentDir);
 }
 
@@ -498,8 +496,6 @@ int argsLength(char **args)
 //Function to start programs
 void start_background(char *command, char *args)
 {
-    addHistory(command, args);
-    
     char *params[MAXARGS];
     int i,n, j = 0;
     pid_t pid;
@@ -540,8 +536,14 @@ void start_background(char *command, char *args)
                 printf("Error: Too many arguments passed to 'background'.\n");
                 return;
             }
+            addHistory('background', NULL);
         }
         
+        if(command == 'start')
+        {
+            addHistory('start', args)
+        }
+
         //Getting the number of the parameters
         n = argsLength(params) + 1;
 
