@@ -541,7 +541,7 @@ void start_background(char *command, char *args)
         
         if(command == 'start')
         {
-            addHistory('start', args)
+            addHistory('start', args);
         }
 
         //Getting the number of the parameters
