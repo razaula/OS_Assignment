@@ -29,6 +29,10 @@ void background(char *args);
 int isCommand(char *string);
 void processInput(char* str);
 char *stripwhite(char *string);
+void dalek(char *args);
+void byebye(char* args);
+struct node;
+void replayProcessInput(struct node *replayNode);
 
 //Variable for length of history
 int histCount=0;
@@ -49,6 +53,7 @@ typedef struct node
     struct node *next;
     struct node *prev;
 } node;
+
 
 //Initializing history head node
 node *head, *tail;
@@ -132,6 +137,8 @@ void clearHistory()
     }
     // free(temp);
     printf("head: %p\n", head);
+
+    createHistory();
 }
 
 //History function that prints out the recently typed commands
@@ -193,23 +200,105 @@ void saveHistory()
     return;
 }
 
+
+
 //Replay function
 void replay(char *args)
 {
-    //verify that args is a number
-        //If not throw an error and return
+   int commandNum = atoi(args);
 
+   //verify that args is a number
+    node *temp = head; 
+    
+    //verify that args is a number
+    if(args == NULL)
+    {
+        printf("Error: No number entered.\n");
+	return;
+    }
+    else
+    {
+        if(temp == NULL)
+        {
+            printf("History is empty.\n");   
+            return;
+        }
+        
+        while(temp != NULL)
+        {
+            if(temp->position == commandNum)
+            {
+                //call updated processInput function
+                replayProcessInput(temp);
+		break;
+            }
+            else temp->next;
+        }
+    }
+        
+
+//	free(updatedArgs);
     //Filter through history linked list until temp->position = args
         //If found print that node to the screen and execute the command
         //else throw error
-// if(head == NULL)
-    // {
-    //     head = temp;
-    //     tail = temp;
-    //     return;
-    // }
     return;
 }
+
+
+//processInput function solely for replay (no strcopy() and addHistory() functions included)
+void replayProcessInput(node *replayNode)
+{
+
+    //Executing commands
+    if(strcmp(replayNode->command, "movetodir") == 0)
+    {
+        movetodir(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "whereami") == 0)
+    {
+        whereami();
+        return;
+    }
+    else if(strcmp(replayNode->command, "history") == 0)
+    {
+        history(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "byebye") == 0)
+    {
+        byebye(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "replay") == 0)
+    {
+        replay(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "start") == 0)
+    {
+        start(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "background") == 0)
+    {
+        background(replayNode->arg);
+        return;
+    }
+    else if(strcmp(replayNode->command, "dalek") == 0)
+    {
+        dalek(replayNode->arg);
+        return;
+    }
+    else
+    {
+        printf("No such command.\n");
+    }
+
+    return;
+}
+
+
 
 //Dalek function
 void dalek(char *args)
@@ -626,9 +715,9 @@ void processInput(char* str)
     }
     else if(strcmp(command, "replay") == 0)
     {
-        strcpy(theCommand, "replay");
-        addHistory(theCommand, args);
         replay(args);
+	strcpy(theCommand, "replay");
+        addHistory(theCommand, args);
         return;
     }
     else if(strcmp(command, "start") == 0)
