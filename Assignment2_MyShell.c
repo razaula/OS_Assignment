@@ -535,12 +535,7 @@ void start_background(char *command, char *args)
 
         if(strcmp(command, "background") == 0)
         {
-            if(params[1] != NULL)
-            {
-                printf("Error: Too many arguments passed to 'background'.\n");
-                return;
-            }
-            addHistory("background", NULL);
+            addHistory("background", args;
         }
         else
         {
@@ -599,7 +594,7 @@ void start_background(char *command, char *args)
             }
             else
             {
-                printf("The pid is: %d", (int)getpid());
+                printf("The pid is: %d",(int)getpid());
             }
         }
         else if (pid > 0) //parent process
