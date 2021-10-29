@@ -21,17 +21,16 @@
 #define MAXPATH 1024 // max number of characters for a file path
 #define MAXARGS 50 //max number of arguments
 
-void start(char *args);
 void whereami(void);
 void init_shell(void);
 void movetodir(char* path);
-void background(char *args);
 int isCommand(char *string);
 void processInput(char* str);
 char *stripwhite(char *string);
 void addHistory(char *commands, char *args);
 void dalek(char *args);
 void byebye(char* args);
+void start_background(char *command, char *args);
 
 
 //Variable for length of history
@@ -294,12 +293,12 @@ void replayProcessInput(node *replayNode)
     }
     else if(strcmp(replayNode->command, "start") == 0)
     {
-        start(replayNode->arg);
+        start_background(replayNode->command, replayNode->arg);
         return;
     }
     else if(strcmp(replayNode->command, "background") == 0)
     {
-        background(replayNode->arg);
+        start_background(replayNode->command, replayNode->arg);
         return;
     }
     else if(strcmp(replayNode->command, "dalek") == 0)
@@ -508,7 +507,7 @@ void start_background(char *command, char *args)
     //Error if there are no arguments passed with 'start'
     if (args == NULL)
     {
-        if(command == "start")
+        if(strcmp(command, "start") == 0)
         {
             printf("Error:'start' requires an argument.\n");
             return;
@@ -534,7 +533,7 @@ void start_background(char *command, char *args)
                     i--;
         }
 
-        if(command == "background")
+        if(strcmp(command, "background") == 0)
         {
             if(params[1] != NULL)
             {
@@ -543,8 +542,7 @@ void start_background(char *command, char *args)
             }
             addHistory("background", NULL);
         }
-        
-        if(command == "start")
+        else
         {
             addHistory("start", args);
         }
@@ -574,7 +572,7 @@ void start_background(char *command, char *args)
         else if(pid == 0) //Child process
         {
             //Absolute path to program
-            if(command == "start")
+            if(strcmp(command, "start") == 0)
             {
                 if(temp[0][0] == '/')
                 {
@@ -635,9 +633,6 @@ void processInput(char* str)
 
     //Everything that comes after the command, may be null
     args = str2;
-
-    //saving the command to the history list
-    // addHistory(command, args);
 
     //Executing commands
     if(strcmp(command, "movetodir") == 0)
