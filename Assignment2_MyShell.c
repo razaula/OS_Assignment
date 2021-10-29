@@ -505,8 +505,8 @@ void start_background(char *command, char *args)
     pid_t pid;
 
     //Error if there are no arguments passed with 'start'
-    if (args == NULL)
-    {
+    if(args == NULL)
+    { 
         if(strcmp(command, "start") == 0)
         {
             printf("Error:'start' requires an argument.\n");
@@ -518,11 +518,22 @@ void start_background(char *command, char *args)
             return;
         }
     }
+
+    if(strcmp(command, "start") == 0)
+    {
+        addHistory("start", args);
+    }
     else
     {
-        //Duplicating the args string because strsep won't work otherwise
-        char *args2 = strdup(args);
-        
+        addHistory("background", args);
+    }
+
+    //Duplicating the args string because strsep won't work otherwise
+    char *args2 = strdup(args);
+
+    //checking if there are program parameters
+    if(args2 != NULL)
+    {
         //Saving the program parameters to an array
         for (i = 0; i < MAXARGS; i++)
         {
@@ -531,15 +542,6 @@ void start_background(char *command, char *args)
                 break;
             if (strlen(params[i]) == 0)
                     i--;
-        }
-
-        if(strcmp(command, "background") == 0)
-        {
-            addHistory("background", args);
-        }
-        else
-        {
-            addHistory("start", args);
         }
 
         //Getting the number of the parameters
@@ -554,56 +556,63 @@ void start_background(char *command, char *args)
         }
         //Setting the last value as null; need for execv to work
         temp[n] = NULL;
+    }
 
-        //creating a new process
-        pid = fork();
+    //creating a new process
+    pid = fork();
 
-        //If fork fails an error is produced
-        if(pid == -1)
+    //If fork fails an error is produced
+    if(pid == -1)
+    {
+        printf("Error: Can't fork.\n");
+        return;
+    }
+    else if(pid == 0) //Child process
+    {
+        //Absolute path to program
+        if(params[0][0] == '/')
         {
-            printf("Error: Can't fork.\n");
-            return;
-        }
-        else if(pid == 0) //Child process
-        {
-            //Absolute path to program
             if(strcmp(command, "start") == 0)
             {
-                if(temp[0][0] == '/')
+                if(execvp(params[0], params) < 0)
                 {
-                    if(execvp(temp[0], temp) < 0)
-                    {
-                        printf("Error: Program could not be executed.\n");
-                        return;
-                    }
-                }
-                else //relative path to program
-                {
-                    //convert relative to absolute path with respect to currentdir
-                    char rPath[MAXPATH];
-                    strcpy(rPath, currentDir);
-                    strcat(rPath, "/");
-                    strcat(rPath, temp[0]);
-
-                    if(execv(temp[0], temp) < 0)
-                    {
-                        printf("Error: Program could not be executed.\n");
-                        return;
-                    }
+                    printf("Error: Program could not be executed.\n");
+                    return;
                 }
             }
             else
             {
-                printf("The pid is: %d",(int)getpid());
+                printf("The pid is: %d", (int)getpid());
+            }
+
+        }
+        else //relative path to program
+        {
+            //convert relative to absolute path with respect to currentdir
+            char rPath[MAXPATH];
+            strcpy(rPath, currentDir);
+            strcat(rPath, "/");
+            strcat(rPath, params[0]);
+            
+            if(strcmp(command, "start") == 0)
+            {
+                if(execv(params[0], params) < 0)
+                {
+                    printf("Error: Program could not be executed.\n");
+                    return;
+                }
+            }
+            else
+            {
+                printf("The pid is: %d", (int)getpid());
             }
         }
-        else if (pid > 0) //parent process
-        {
-            //Queues parent until child program exits
-            wait(NULL);
-            return;
-        }
-        free(temp);
+    }
+    else if (pid > 0) //parent process
+    {
+        //Queues parent until child program exits
+        wait(NULL);
+        return;
     }
 }
 
