@@ -1,6 +1,5 @@
-history àk”Ãb
-whereami àk”Ãb
-replay 0
-history àk”Ãb
+4
+whereami à[l
+history 
 replay 1
 byebye 

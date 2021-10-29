@@ -98,7 +98,7 @@ void createHistory()
     while (fgets(buffer, sizeof(buffer), file) != NULL)
     {
       //char *strBuffer = strdup(buffer);
-
+      
       temp = malloc(sizeof(node));
       temp->position = 0;
       temp->command = malloc(sizeof(char));
@@ -154,7 +154,7 @@ void clearHistory()
     //printf("head: %p\n", head);
 
 
-   // histCount = 0;
+   histCount = 0;
    // head = tail = malloc(sizeof(node));
     createHistory();
 }
@@ -174,7 +174,7 @@ void history(char *args)
 
     if (head != NULL && args == NULL)
     {
-      printf("head: %p\n", head);
+      //printf("head: %p\n", head);
       while (temp->prev != NULL)
       {
         printf("%d: %s\n", i, temp->command);
@@ -206,6 +206,8 @@ void saveHistory()
         printf("Unable to create file.\n");
         return;
     }
+
+    fprintf(file, "%d\n", histCount);
 
     while (temp != NULL)
     {
@@ -255,10 +257,10 @@ void replay(char *args)
         while(temp != NULL)
         {
 	  //printf("here\n");
-            if(temp->position == commandNum)
+            if(temp->position == (histCount - commandNum - 1))
             {
 		//printf("Made it here\n");
-		printf("%s\n", temp->command);
+		printf("%s %s\n", temp->command, temp->arg);
 
                 //call updated processInput function
                 replayProcessInput(temp);
