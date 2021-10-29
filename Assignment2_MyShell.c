@@ -56,19 +56,6 @@ node *head, *tail;
 void createHistory()
 {
   FILE *file = fopen("history_list.txt", "r");
-  // node *temp = malloc(sizeof(node));
-
-  // Just gotta figure out how to read the commands from the saved file
-  // and convert it into a linked list.
-
-  // head = malloc(sizeof(node));
-  // head->command = NULL;
-  // head->position = 0;
-  // head->command = NULL;
-  // head->arg = NULL;
-  // head->next = NULL;
-  // head->prev = NULL;
-  // tail = head;
 
   // Create a new history list if no file exists.
   head = malloc(sizeof(node));
@@ -121,6 +108,7 @@ void createHistory()
 //Clear history function
 void clearHistory()
 {
+    
     //Clear the linked list
     node *temp = head;
 
@@ -137,6 +125,8 @@ void clearHistory()
 //History function that prints out the recently typed commands
 void history(char *args)
 {
+    addHistory('history', args);
+    
     node *temp = tail;
     int i = 0;
 
@@ -160,13 +150,13 @@ void history(char *args)
     {
       clearHistory();
     }
-
     return;
 }
 
 //Function that saves the history to a file
 void saveHistory()
 {
+    
     //Open/create a file and write the linked list to it
     char data[DATASIZE];
     FILE *file;
@@ -214,6 +204,8 @@ void replay(char *args)
 //Dalek function
 void dalek(char *args)
 {
+    addHistory('dalek', args);
+    
     //Intitializing the PID
     pid_t pid;
 
@@ -250,7 +242,7 @@ void addHistory(char *commands, char *args)
     node *temp = malloc(sizeof(node));
     temp->command = malloc(sizeof(char));
     temp->arg = malloc(sizeof(char));
-
+    
     //Saving the data to the new node
     temp->position = histCount;
     strcpy(temp->command, commands);
@@ -282,6 +274,8 @@ void addHistory(char *commands, char *args)
 //ByeBye Function
 void byebye(char* args)
 {
+    addHistory('byebye', args);
+    
     //throws error if there are parameters
     if(args != NULL)
     {
@@ -321,11 +315,13 @@ void init_shell()
 // Function to print Current Directory.
 void whereami()
 {
+    addHistory('whereami', args);
     printf("\nDir: %s\n", currentDir);
 }
 
 void movetodir(char* path)
 {
+    addHistory('movetodir', *path);
     char *temp;
 
     //Checking if the directory is a relative or absolute path
@@ -391,8 +387,10 @@ int argsLength(char **args)
 }
 
 //Function to start programs
-void start(char *args)
+void start_background(char *command, char *args)
 {
+    addHistory(command, args);
+    
     char *params[MAXARGS];
     int i,n, j = 0;
     pid_t pid;
@@ -400,16 +398,22 @@ void start(char *args)
     //Error if there are no arguments passed with 'start'
     if (args == NULL)
     {
-        printf("Error:'start' requires an argument.\n");
-        return;
+        if(command == 'start')
+        {
+            printf("Error:'start' requires an argument.\n");
+            return;
+        }
+        else
+        {
+            printf("Error:'background' requires a program argument.\n");
+            return;
+        }
     }
-
-    //Duplicating the args string because strsep won't work otherwise
-    char *args2 = strdup(args);
-
-    //checking if there are program parameters
-    if(args2 != NULL)
+    else
     {
+        //Duplicating the args string because strsep won't work otherwise
+        char *args2 = strdup(args);
+        
         //Saving the program parameters to an array
         for (i = 0; i < MAXARGS; i++)
         {
@@ -420,6 +424,15 @@ void start(char *args)
                     i--;
         }
 
+        if(command == 'background')
+        {
+            if(params[1] != NULL)
+            {
+                printf("Error: Too many arguments passed to 'background'.\n");
+                return;
+            }
+        }
+        
         //Getting the number of the parameters
         n = argsLength(params) + 1;
 
@@ -432,136 +445,56 @@ void start(char *args)
         }
         //Setting the last value as null; need for execv to work
         temp[n] = NULL;
-    }
 
-    //creating a new process
-    pid = fork();
+        //creating a new process
+        pid = fork();
 
-    //If fork fails an error is produced
-    if(pid == -1)
-    {
-        printf("Error: Can't fork.\n");
-        return;
-    }
-    else if(pid == 0) //Child process
-    {
-        //Absolute path to program
-        if(params[0][0] == '/')
+        //If fork fails an error is produced
+        if(pid == -1)
         {
-            if(execvp(params[0], params) < 0)
+            printf("Error: Can't fork.\n");
+            return;
+        }
+        else if(pid == 0) //Child process
+        {
+            //Absolute path to program
+            if(command == 'start')
             {
-                printf("Error: Program could not be executed.\n");
-                return;
+                if(temp[0][0] == '/')
+                {
+                    if(execvp(temp[0], temp) < 0)
+                    {
+                        printf("Error: Program could not be executed.\n");
+                        return;
+                    }
+                }
+                else //relative path to program
+                {
+                    //convert relative to absolute path with respect to currentdir
+                    char rPath[MAXPATH];
+                    strcpy(rPath, currentDir);
+                    strcat(rPath, "/");
+                    strcat(rPath, temp[0]);
+
+                    if(execv(temp[0], temp) < 0)
+                    {
+                        printf("Error: Program could not be executed.\n");
+                        return;
+                    }
+                }
             }
-
-        }
-        else //relative path to program
-        {
-            //convert relative to absolute path with respect to currentdir
-            char rPath[MAXPATH];
-            strcpy(rPath, currentDir);
-            strcat(rPath, "/");
-            strcat(rPath, params[0]);
-
-            if(execv(params[0], params) < 0)
+            else
             {
-                printf("Error: Program could not be executed.\n");
-                return;
-            }
-        }
-    }
-    else if (pid > 0) //parent process
-    {
-        //Queues parent until child program exits
-        wait(NULL);
-        return;
-    }
-}
-
-//Backgroaund function, almost the same as the start fumction
-void background(char *args)
-{
-    char *params[MAXARGS];
-    pid_t pid;
-    int i, n, j=0;
-
-    //Error if there are no arguments passed with 'start'
-    if (args == NULL)
-    {
-        printf("Error:'start' requires an argument.\n");
-        return;
-    }
-
-    //Duplicating the args string because strsep won't work otherwise
-    char *args2 = strdup(args);
-
-    //checking if there are program parameters
-    if(args2 != NULL)
-    {
-        //Saving the program parameters to an array
-        for (i = 0; i < MAXARGS; i++)
-        {
-            params[i] = strsep(&args2, " ");
-            if (params[i] == NULL)
-                break;
-            if (strlen(params[i]) == 0)
-                    i--;
-        }
-
-        //Getting the number of the parameters
-        n = argsLength(params) + 1;
-
-        //Saving the parameters to a new array of the correct size
-        char *temp[n];
-        while(params[j] != NULL)
-        {
-            temp[j] = params[j];
-            j++;
-        }
-        //Setting the last value as null; need for execv to work
-        temp[n] = NULL;
-    }
-
-    //creating a new process
-    pid = fork();
-
-    //If fork fails an error is produced
-    if(pid == -1)
-    {
-        printf("Error: Can't fork.\n");
-        return;
-    }
-    else if(pid == 0) //Child process
-    {
-        //Absolute path to program
-        if(params[0][0] == '/')
-        {
-            if(execvp(params[0], params) < 0)
-            {
-                printf("Error: Program could not be executed.\n");
-                return;
-            }
-
-        }
-        else //relative path to program
-        {
-            //convert relative to absolute path with respect to currentdir
-            char rPath[MAXPATH];
-            strcpy(rPath, currentDir);
-            strcat(rPath, "/");
-            strcat(rPath, params[0]);
-
-            if(execv(params[0], params) < 0)
-            {
-                printf("Error: Program could not be executed.\n");
-                return;
+                printf("The pid is: %d", (int)getpid());
             }
         }
-    }
-    else if(pid > 0) //parent process
-    {
-        //Prints program PID
-        printf("PID: %d\n", pid);
+        else if (pid > 0) //parent process
+        {
+            //Queues parent until child program exits
+            wait(NULL);
+            return;
+        }
+        free(temp);
     }
 }
 
@@ -578,7 +511,7 @@ char* stripwhite(char *str)
 
 void processInput(char* str)
 {
-    char *command, *args, *theCommand;
+    char *command, *args;
     char *str2 = strdup(str);
 
     //Separating the command from the input
@@ -593,23 +526,16 @@ void processInput(char* str)
     //Executing commands
     if(strcmp(command, "movetodir") == 0)
     {
-        strcpy(theCommand, "movetodir");
-        addHistory(theCommand, args);
         movetodir(args);
         return;
     }
     else if(strcmp(command, "whereami") == 0)
     {
-        strcpy(theCommand, "whereami");
-        addHistory(theCommand, args);
         whereami();
         return;
     }
     else if(strcmp(command, "history") == 0)
     {
-        strcpy(theCommand, "history");
-        addHistory(theCommand, args);
-
         if (args == NULL)
           history(NULL);
         else
@@ -619,36 +545,26 @@ void processInput(char* str)
     }
     else if(strcmp(command, "byebye") == 0)
     {
-        strcpy(theCommand, "byebye");
-        // addHistory(theCommand, args);
         byebye(args);
         return;
     }
     else if(strcmp(command, "replay") == 0)
     {
-        strcpy(theCommand, "replay");
-        addHistory(theCommand, args);
         replay(args);
         return;
     }
     else if(strcmp(command, "start") == 0)
     {
-        strcpy(theCommand, "start");
-        addHistory(theCommand, args);
-        start(args);
+        start_background(command, args);
         return;
     }
     else if(strcmp(command, "background") == 0)
     {
-        strcpy(theCommand, "background");
-        addHistory(theCommand, args);
-        background(args);
+        start_background(command, args);
         return;
     }
     else if(strcmp(command, "dalek") == 0)
     {
-        strcpy(theCommand, "dalek");
-        addHistory(theCommand, args);
         dalek(args);
         return;
     }
@@ -682,3 +598,4 @@ int main()
     }
 
 }
+
