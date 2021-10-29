@@ -29,6 +29,10 @@ void background(char *args);
 int isCommand(char *string);
 void processInput(char* str);
 char *stripwhite(char *string);
+void addHistory(char *commands, char *args);
+void dalek(char *args);
+void byebye(char* args);
+
 
 //Variable for length of history
 int histCount=0;
@@ -49,6 +53,7 @@ typedef struct node
     struct node *next;
     struct node *prev;
 } node;
+void replayProcessInput(node *replayNode);
 
 //Initializing history head node
 node *head, *tail;
@@ -313,7 +318,7 @@ void replayProcessInput(node *replayNode)
 //Dalek function
 void dalek(char *args)
 {
-    addHistory('dalek', args);
+    addHistory("dalek", args);
     
     //Intitializing the PID
     pid_t pid;
@@ -422,13 +427,13 @@ void init_shell()
 // Function to print Current Directory.
 void whereami()
 {
-    addHistory('whereami');
+    addHistory("whereami", NULL);
     printf("\nDir: %s\n", currentDir);
 }
 
 void movetodir(char* path)
 {
-    addHistory('movetodir', *path);
+    addHistory("movetodir", path);
     char *temp;
 
     //Checking if the directory is a relative or absolute path
@@ -503,7 +508,7 @@ void start_background(char *command, char *args)
     //Error if there are no arguments passed with 'start'
     if (args == NULL)
     {
-        if(command == 'start')
+        if(command == "start")
         {
             printf("Error:'start' requires an argument.\n");
             return;
@@ -529,19 +534,19 @@ void start_background(char *command, char *args)
                     i--;
         }
 
-        if(command == 'background')
+        if(command == "background")
         {
             if(params[1] != NULL)
             {
                 printf("Error: Too many arguments passed to 'background'.\n");
                 return;
             }
-            addHistory('background', NULL);
+            addHistory("background", NULL);
         }
         
-        if(command == 'start')
+        if(command == "start")
         {
-            addHistory('start', args);
+            addHistory("start", args);
         }
 
         //Getting the number of the parameters
@@ -569,7 +574,7 @@ void start_background(char *command, char *args)
         else if(pid == 0) //Child process
         {
             //Absolute path to program
-            if(command == 'start')
+            if(command == "start")
             {
                 if(temp[0][0] == '/')
                 {
