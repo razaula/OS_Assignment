@@ -535,7 +535,7 @@ void start_background(char *command, char *args)
 
         if(strcmp(command, "background") == 0)
         {
-            addHistory("background", args;
+            addHistory("background", args);
         }
         else
         {
