@@ -89,18 +89,23 @@ void createHistory()
   // Read the commands from the list.
   if (file != NULL)
   {
+    //ssize_t read;
+    //size_t len = 0;
     char buffer[MAXCOM];
     node *temp;
     char *token = NULL;
 
-    while (fgets(buffer, MAXCOM, file) != NULL)
+    while (fgets(buffer, sizeof(buffer), file) != NULL)
     {
+      //char *strBuffer = strdup(buffer);
+
       temp = malloc(sizeof(node));
       temp->position = 0;
       temp->command = malloc(sizeof(char));
       temp->arg = malloc(sizeof(char));
       temp->next = NULL;
       temp->prev = NULL;
+
 
       token = strtok(buffer, " ");
       strcpy(temp->command, token);
@@ -110,6 +115,7 @@ void createHistory()
       if (token != NULL)
         strcpy(temp->arg, token);
 
+
       histCount++;
       tail->position++;
 
@@ -118,14 +124,20 @@ void createHistory()
       tail = temp;
     }
     tail->next = NULL;
-  }
+    fclose(file);  
+}
 
-  fclose(file);
+  
 }
 
 //Clear history function
 void clearHistory()
 {
+   // FILE *file;
+    //file = fopen("history_list.txt", "r");
+    int ret;
+
+    //fclose(file);
     //Clear the linked list
     node *temp = head;
 
@@ -135,11 +147,18 @@ void clearHistory()
       free(head);
       head = temp;
     }
-    // free(temp);
-    printf("head: %p\n", head);
 
+    ret = remove("history_list.txt");
+
+    // free(temp);
+    //printf("head: %p\n", head);
+
+
+   // histCount = 0;
+   // head = tail = malloc(sizeof(node));
     createHistory();
 }
+
 
 //History function that prints out the recently typed commands
 void history(char *args)
@@ -156,7 +175,7 @@ void history(char *args)
     if (head != NULL && args == NULL)
     {
       printf("head: %p\n", head);
-      while (temp != NULL)
+      while (temp->prev != NULL)
       {
         printf("%d: %s\n", i, temp->command);
         i++;
@@ -190,8 +209,16 @@ void saveHistory()
 
     while (temp != NULL)
     {
-      fputs(temp->command, file);
-      fputs("\n", file);
+
+      if(temp->arg ==  NULL)
+      {
+	fprintf(file, "%s\n",temp->command);
+      }
+      else
+      {
+        fprintf(file, "%s %s\n",temp->command, temp->arg);
+      }
+
       temp = temp->next;
     }
 
@@ -206,6 +233,7 @@ void saveHistory()
 void replay(char *args)
 {
    int commandNum = atoi(args);
+  // printf("%d\n", commandNum);
 
    //verify that args is a number
     node *temp = head; 
@@ -220,19 +248,23 @@ void replay(char *args)
     {
         if(temp == NULL)
         {
-            printf("History is empty.\n");   
+           // printf("History is empty.\n");   
             return;
         }
         
         while(temp != NULL)
         {
+	  //printf("here\n");
             if(temp->position == commandNum)
             {
+		//printf("Made it here\n");
+		printf("%s\n", temp->command);
+
                 //call updated processInput function
                 replayProcessInput(temp);
 		break;
             }
-            else temp->next;
+            else temp = temp->next;
         }
     }
         
@@ -416,6 +448,12 @@ void whereami()
 void movetodir(char* path)
 {
     char *temp;
+
+    if(path == NULL)
+    {
+        printf("Error: No path entered.\n");
+	return;
+    }
 
     //Checking if the directory is a relative or absolute path
     if(path[0] == '/')

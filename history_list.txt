@@ -1,0 +1,6 @@
+history àk”Ãb
+whereami àk”Ãb
+replay 0
+history àk”Ãb
+replay 1
+byebye 
