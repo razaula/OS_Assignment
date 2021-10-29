@@ -218,8 +218,6 @@ void saveHistory()
 //Replay function
 void replay(char *args)
 {
-   addHistory("replay", args);
-
    int commandNum = atoi(args);
   // printf("%d\n", commandNum);
 
