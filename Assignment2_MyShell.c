@@ -246,7 +246,7 @@ void replay(char *args)
 		        if(temp->arg == NULL)
                 {
                     //printf("Made it here\n");
-		            printf("%s %s\n", temp->command);
+		            printf("%s\n", temp->command);
 
                     //call updated processInput function
                     replayProcessInput(temp);
