@@ -218,6 +218,8 @@ void saveHistory()
 //Replay function
 void replay(char *args)
 {
+   addHistory("replay", args);
+
    int commandNum = atoi(args);
   // printf("%d\n", commandNum);
 
@@ -243,12 +245,22 @@ void replay(char *args)
 	  //printf("here\n");
             if(temp->position == (histCount - commandNum - 1))
             {
-		//printf("Made it here\n");
-		printf("%s %s\n", temp->command, temp->arg);
+		        if(temp->arg == NULL)
+                {
+                    //printf("Made it here\n");
+		            printf("%s %s\n", temp->command);
 
-                //call updated processInput function
-                replayProcessInput(temp);
-		break;
+                    //call updated processInput function
+                    replayProcessInput(temp);
+		            break;
+                }
+                else
+                {
+                    //printf("Made it here\n");
+		            printf("%s %s\n", temp->command, temp->arg); 
+                    //call updated processInput function
+                    replayProcessInput(temp);  
+                }
             }
             else temp = temp->next;
         }
